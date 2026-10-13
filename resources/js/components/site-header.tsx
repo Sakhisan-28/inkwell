@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppearance } from '@/hooks/use-appearance';
+import { SHOW_AUTH_ENTRYPOINTS } from '@/lib/site';
 import { dashboard, login, register } from '@/routes';
 
 function AppearanceToggle() {
@@ -72,7 +73,7 @@ export default function SiteHeader() {
                         >
                             <Link href={dashboard()}>Dashboard</Link>
                         </Button>
-                    ) : (
+                    ) : SHOW_AUTH_ENTRYPOINTS ? (
                         <>
                             <Button
                                 asChild
@@ -90,7 +91,7 @@ export default function SiteHeader() {
                                 <Link href={register()}>Subscribe</Link>
                             </Button>
                         </>
-                    )}
+                    ) : null}
                 </div>
             </div>
             {/* Magazine double rule */}
