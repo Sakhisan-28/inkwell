@@ -5,21 +5,38 @@ import { PostCard, PostsEmptyState } from '@/components/post-card';
 import type { PostPreview } from '@/components/post-card';
 import { show } from '@/routes/posts';
 
+type SeoConfig = {
+    description?: string;
+    url?: string;
+    type?: string;
+};
+
 export default function ArticleIndex({
     title,
     eyebrow,
     description,
     posts,
     toolbar,
+    seo,
 }: {
     title: string;
     eyebrow: string;
     description?: string;
     posts: PostPreview[];
     toolbar?: ReactNode;
+    seo?: SeoConfig | null;
 }) {
     return (
-        <PublicLayout title={title}>
+        <PublicLayout
+            title={title}
+            seo={{
+                title,
+                description: seo?.description ?? description,
+                image: null,
+                url: seo?.url,
+                type: seo?.type ?? 'website',
+            }}
+        >
             <section className="mx-auto max-w-6xl px-4 pt-16 pb-20 sm:px-8">
                 <p className="text-xs tracking-[0.24em] text-[#B4542D] uppercase dark:text-[#D97B54]">
                     {eyebrow}

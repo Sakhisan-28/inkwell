@@ -9,11 +9,16 @@ export function useFlashToast(): void {
             const flash = (event as CustomEvent).detail?.flash;
             const data = flash?.toast as FlashToast | undefined;
 
-            if (!data) {
-                return;
+            if (data) {
+                toast[data.type](data.message);
+            } else {
+                if (flash?.success) {
+                    toast.success(flash.success);
+                }
+                if (flash?.error) {
+                    toast.error(flash.error);
+                }
             }
-
-            toast[data.type](data.message);
         });
     }, []);
 }

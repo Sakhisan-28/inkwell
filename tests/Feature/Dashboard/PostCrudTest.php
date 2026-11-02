@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class PostCrudTest extends TestCase
@@ -73,6 +74,59 @@ class PostCrudTest extends TestCase
         $this->assertNotNull($post->published_at);
     }
 
+    public function test_admin_can_update_with_post_method_spoofing_like_browser()
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin);
+        $post = Post::factory()->draft()->create();
+
+        // Browser mengirim update ber-file sebagai POST multipart +
+        // _method=put (PUT multipart tidak dibaca oleh PHP).
+        $response = $this->post("/dashboard/posts/{$post->id}", array_merge($this->validData([
+            'title' => 'Judul Diubah Via Spoof',
+            'cover_image' => UploadedFile::fake()->image('sampul.jpg', 800, 600)->size(500),
+        ]), ['_method' => 'put']));
+
+        $response->assertRedirect('/dashboard/posts');
+        $post->refresh();
+        $this->assertSame('Judul Diubah Via Spoof', $post->title);
+        $this->assertNotNull($post->cover_image);
+        Storage::disk('public')->assertExists($post->cover_image);
+    }
+
+    /**
+     * @dataProvider coverUploadErrorProvider
+     */
+    #[DataProvider('coverUploadErrorProvider')]
+    public function test_cover_upload_error_code_produces_specific_message(int $code, string $expectedMessage)
+    {
+        Storage::fake('public');
+        $this->actingAs(User::factory()->admin()->create());
+
+        $path = tempnam(sys_get_temp_dir(), 'cover').'.jpg';
+        file_put_contents($path, 'dummy');
+        $broken = new UploadedFile($path, 'sampul.jpg', 'image/jpeg', $code, true);
+
+        $response = $this->post('/dashboard/posts', array_merge(
+            $this->validData(),
+            ['cover_image' => $broken]
+        ));
+
+        $response->assertInvalid(['cover_image' => $expectedMessage]);
+        $this->assertSame(0, Post::count());
+        unlink($path);
+    }
+
+    public function coverUploadErrorProvider(): array
+    {
+        return [
+            'ini size' => [UPLOAD_ERR_INI_SIZE, 'Gambar sampul melebihi batas upload server.'],
+            'partial' => [UPLOAD_ERR_PARTIAL, 'Gambar sampul terputus saat diunggah. Silakan coba lagi.'],
+            'cant write' => [UPLOAD_ERR_CANT_WRITE, 'Server gagal menyimpan berkas unggahan. Hubungi admin.'],
+        ];
+    }
+
     public function test_admin_can_publish_and_unpublish()
     {
         $this->actingAs(User::factory()->admin()->create());
@@ -118,7 +172,7 @@ class PostCrudTest extends TestCase
         Storage::fake('public');
         $this->actingAs(User::factory()->admin()->create());
 
-        $tooBig = UploadedFile::fake()->create('besar.jpg', 3000, 'image/jpeg');
+        $tooBig = UploadedFile::fake()->create('besar.jpg', 6000, 'image/jpeg');
         $this->post('/dashboard/posts', $this->validData(['cover_image' => $tooBig]))
             ->assertSessionHasErrors(['cover_image']);
 
@@ -199,5 +253,36 @@ class PostCrudTest extends TestCase
             ->component('dashboard/posts/index')
             ->has('posts.data', 1)
         );
+    }
+
+    public function test_attach_and_detach_tags_on_post_update()
+    {
+        $this->actingAs(User::factory()->admin()->create());
+        $post = Post::factory()->draft()->create();
+
+        $tag1 = Tag::factory()->create(['name' => 'Tag Pertama']);
+        $tag2 = Tag::factory()->create(['name' => 'Tag Kedua']);
+        $tag3 = Tag::factory()->create(['name' => 'Tag Ketiga']);
+
+        $this->put("/dashboard/posts/{$post->id}", $this->validData([
+            'tags' => [$tag1->id, $tag2->id],
+        ]))->assertRedirect('/dashboard/posts');
+
+        $post->refresh();
+        $this->assertEqualsCanonicalizing([$tag1->id, $tag2->id], $post->tags()->pluck('tags.id')->all());
+
+        $this->put("/dashboard/posts/{$post->id}", $this->validData([
+            'tags' => [$tag2->id, $tag3->id],
+        ]))->assertRedirect('/dashboard/posts');
+
+        $post->refresh();
+        $this->assertEqualsCanonicalizing([$tag2->id, $tag3->id], $post->tags()->pluck('tags.id')->all());
+
+        $this->put("/dashboard/posts/{$post->id}", $this->validData([
+            'tags' => [],
+        ]))->assertRedirect('/dashboard/posts');
+
+        $post->refresh();
+        $this->assertCount(0, $post->tags()->pluck('tags.id')->all());
     }
 }

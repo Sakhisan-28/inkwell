@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { Search } from 'lucide-react';
 import ArticleIndex from '@/components/article-index';
 import type { PostPreview } from '@/components/post-card';
@@ -14,12 +14,20 @@ type PageProps = {
 export default function SearchResults({ query, posts }: PageProps) {
     const [value, setValue] = useState(query);
 
+    const { props } = usePage();
+    const appUrl = props?.appUrl || '';
+    const canonicalUrl = `${appUrl}/search?q=${encodeURIComponent(query)}`;
+
     return (
         <ArticleIndex
             title={`Results for "${query}"`}
             eyebrow="Search"
             description={`${posts.length} ${posts.length === 1 ? 'story' : 'stories'} found.`}
             posts={posts}
+            seo={{
+                description: `${posts.length} ${posts.length === 1 ? 'story' : 'stories'} found.`,
+                url: canonicalUrl,
+            }}
             toolbar={
                 <form
                     className="flex gap-2"

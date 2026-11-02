@@ -273,7 +273,8 @@ tests/Feature/ (PHPUnit feature tests)
 | Public | GET /author/{user} | Posts by author |
 | Public | GET /search?q= | Search results |
 | Public | GET /about | About page |
-| Public | GET /sitemap.xml | Sitemap (RSS not built yet) |
+| Public | GET /sitemap.xml | XML sitemap |
+| Public | GET /feed.xml | RSS 2.0 feed (20 latest published posts) |
 | Auth | /login, /forgot-password, /two-factor-challenge | Authentication (public registration disabled; owner account only) |
 | Owner | GET /dashboard | Dashboard with overview stats (admin only sees stats) |
 | Legacy | ANY /admin/overview | Redirects 301 to /dashboard |
@@ -349,7 +350,7 @@ tests/Feature/ (PHPUnit feature tests)
 
 Done: public reading experience (home, post, category, tag, author, search, about), draft/publish model with auto-slug and reading time, sanitized Markdown rendering, approved-comment display, related posts, sitemap + robots.txt, owner dashboard overview cards, roles with gate/policy, Fortify auth (login, reset, 2FA, passkeys).
 
-Remaining Must items: taxonomy management (ADM-5, TAX-1/3), comment submission + moderation + rate limit (COM-1/3/5, ADM-4), SEO meta/OG/canonical (SEO-1/2/4), error pages (PUB-8). Remaining Should: RSS feed (SEO-5), site settings table (ADM-6).
+Remaining Must items: comment submission + moderation + rate limit (COM-1/3/5, ADM-4), error pages (PUB-8). Remaining Should: site settings table (ADM-6).
 
 Done in Plan 1 (2026-10-13): post CRUD + publish/unpublish (POST-1), Markdown editor with server preview (POST-3), cover upload + resize with no-driver fallback, post list with search/filter (ADM-2/3). Delete is soft delete (model already used SoftDeletes).
 

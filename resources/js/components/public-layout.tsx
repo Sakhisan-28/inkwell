@@ -1,17 +1,37 @@
 import type { ReactNode } from 'react';
-import { Head } from '@inertiajs/react';
 import SiteHeader from '@/components/site-header';
+import { SeoHead } from '@/components/seo-head';
+
+type SeoConfig = {
+    title?: string;
+    description?: string;
+    image?: string | null;
+    url?: string;
+    type?: string;
+    siteName?: string;
+};
 
 export default function PublicLayout({
     title,
     children,
+    seo,
 }: {
-    title: string;
+    title?: string;
     children: ReactNode;
+    seo?: SeoConfig | null;
 }) {
     return (
         <>
-            <Head title={title} />
+            {seo !== null && (
+                <SeoHead
+                    title={seo?.title ?? title}
+                    description={seo?.description}
+                    image={seo?.image}
+                    url={seo?.url}
+                    type={seo?.type ?? 'website'}
+                    siteName={seo?.siteName}
+                />
+            )}
             <div className="flex min-h-screen flex-col bg-[#FAF6F0] text-[#1C1917] dark:bg-[#1C1917] dark:text-[#F5F0E8]">
                 <SiteHeader />
                 <main className="flex-1">{children}</main>

@@ -3,7 +3,7 @@ import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppearance } from '@/hooks/use-appearance';
 import { SHOW_AUTH_ENTRYPOINTS } from '@/lib/site';
-import { dashboard, login, register } from '@/routes';
+import { dashboard, login } from '@/routes';
 
 function AppearanceToggle() {
     const { resolvedAppearance, updateAppearance } = useAppearance();
@@ -74,23 +74,13 @@ export default function SiteHeader() {
                             <Link href={dashboard()}>Dashboard</Link>
                         </Button>
                     ) : SHOW_AUTH_ENTRYPOINTS ? (
-                        <>
-                            <Button
-                                asChild
-                                variant="ghost"
-                                size="sm"
-                                className="text-[#57534E] hover:text-[#1C1917] dark:text-[#CBC4B8] dark:hover:text-[#F5F0E8]"
-                            >
-                                <Link href={login()}>Log in</Link>
-                            </Button>
-                            <Button
-                                asChild
-                                size="sm"
-                                className="bg-[#B4542D] text-[#FFF9F0] hover:bg-[#B4542D]/90 dark:bg-[#D97B54] dark:text-[#1C1917] dark:hover:bg-[#D97B54]/90"
-                            >
-                                <Link href={register()}>Subscribe</Link>
-                            </Button>
-                        </>
+                        <Button
+                            asChild
+                            size="sm"
+                            className="bg-[#B4542D] text-[#FFF9F0] hover:bg-[#B4542D]/90 dark:bg-[#D97B54] dark:text-[#1C1917] dark:hover:bg-[#D97B54]/90"
+                        >
+                            <Link href={login()}>Log in</Link>
+                        </Button>
                     ) : null}
                 </div>
             </div>

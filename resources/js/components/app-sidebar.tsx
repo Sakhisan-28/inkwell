@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FileText, FolderGit2, LayoutGrid } from 'lucide-react';
+import { BookOpen, FileText, FolderGit2, LayoutGrid, Folder, Tag } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -15,6 +15,9 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as postsIndex } from '@/routes/dashboard/posts';
+import { index as categoriesIndex } from '@/routes/dashboard/categories';
+import { index as tagsIndex } from '@/routes/dashboard/tags';
+import { index as commentsIndex } from '@/routes/dashboard/dashboard/comments';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -30,6 +33,21 @@ const adminNavItems: NavItem[] = [
         title: 'Artikel',
         href: postsIndex(),
         icon: FileText,
+    },
+    {
+        title: 'Kategori',
+        href: categoriesIndex(),
+        icon: Folder,
+    },
+    {
+        title: 'Tag',
+        href: tagsIndex(),
+        icon: Tag,
+    },
+    {
+        title: 'Komentar',
+        href: commentsIndex(),
+        icon: Tag, // reuse tag icon for pragmatic dashboard category shortcut
     },
 ];
 

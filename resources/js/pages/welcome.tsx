@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
 import FeaturedStory from '@/components/featured-story';
 import { PostCard, PostsEmptyState } from '@/components/post-card';
@@ -6,9 +6,10 @@ import type { PostPreview } from '@/components/post-card';
 import SiteHeader from '@/components/site-header';
 import { Badge } from '@/components/ui/badge';
 import { SHOW_AUTH_ENTRYPOINTS } from '@/lib/site';
-import { home, register } from '@/routes';
+import { home, login } from '@/routes';
 import { show as showCategory } from '@/routes/categories';
 import { show as showPost } from '@/routes/posts';
+import { SeoHead } from '@/components/seo-head';
 
 type CategoryPreview = {
     name: string;
@@ -29,12 +30,18 @@ export default function Welcome({
     latest = [],
     categories = [],
 }: PageProps) {
-    const { auth } = usePage().props;
+    const { props } = usePage();
+    const appUrl = props?.appUrl || '';
+    const { auth } = props;
     const latestPosts = latest.length > 0 ? latest : posts.slice(0, 6);
 
     return (
         <>
-            <Head title="Inkwell — A journal for slow reading" />
+            <SeoHead
+                title="Inkwell — A journal for slow reading"
+                description="Write simply. Publish beautifully. A journal of essays & notes — Vol. I."
+                url={`${appUrl}${home().url}`}
+            />
             <div className="flex min-h-screen flex-col bg-[#FAF6F0] text-[#1C1917] dark:bg-[#1C1917] dark:text-[#F5F0E8]">
                 <SiteHeader />
 
@@ -57,7 +64,7 @@ export default function Welcome({
                             <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-3">
                                 {!auth.user && SHOW_AUTH_ENTRYPOINTS && (
                                     <Link
-                                        href={register()}
+                                        href={login()}
                                         className="group inline-flex items-center gap-2 font-display text-lg italic underline decoration-[#B4542D]/50 decoration-1 underline-offset-8 transition-colors hover:text-[#B4542D] dark:decoration-[#D97B54]/50 dark:hover:text-[#D97B54]"
                                     >
                                         Begin writing

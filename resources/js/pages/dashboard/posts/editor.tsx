@@ -2,7 +2,6 @@ import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -12,6 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { TagPicker } from '@/components/tag-picker';
 import { dashboard } from '@/routes';
 import {
     index as postsIndex,
@@ -45,7 +45,7 @@ export default function PostEditor({
     tags: { id: number; name: string }[];
 }) {
     const isEdit = post !== undefined;
-    const { data, setData, post: submitPost, put, processing, errors } = useForm({
+    const { data, setData, post: submitPost, processing, errors, transform } = useForm({
         title: post?.title ?? '',
         slug: post?.slug ?? '',
         excerpt: post?.excerpt ?? '',
@@ -64,13 +64,52 @@ export default function PostEditor({
     const [previewHtml, setPreviewHtml] = useState('');
     const [previewLoading, setPreviewLoading] = useState(false);
     const [coverPreview, setCoverPreview] = useState<string | null>(null);
+    const [coverError, setCoverError] = useState<string | null>(null);
+
+    const MAX_COVER_BYTES = 5 * 1024 * 1024;
+    const ALLOWED_COVER_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+    function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0] ?? null;
+        if (
+            file !== null &&
+            (file.size > MAX_COVER_BYTES ||
+                !ALLOWED_COVER_TYPES.includes(file.type))
+        ) {
+            setCoverError(
+                'Gambar sampul maksimal 5 MB dengan format JPG, PNG, atau WebP.',
+            );
+            setData('cover_image', null);
+            setCoverPreview(null);
+            e.target.value = '';
+            return;
+        }
+        setCoverError(null);
+        setData('cover_image', file);
+        setCoverPreview(file ? URL.createObjectURL(file) : null);
+    }
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
+        if (coverError !== null) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+        // Saat validasi gagal, Inertia mengembalikan errors tanpa pindah
+        // halaman — scroll ke atas agar ringkasan error terlihat.
+        const options = {
+            onError: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+        };
+        // PHP tidak mengurai body multipart pada request PUT, sehingga
+        // update yang membawa file selalu tiba kosong dan gagal validasi
+        // (title/body/status required). Selalu spoof via POST + _method.
+        transform((payload) =>
+            isEdit && post ? { ...payload, _method: 'put' } : payload,
+        );
         if (isEdit && post) {
-            put(update.url(post.id));
+            submitPost(update.url(post.id), options);
         } else {
-            submitPost(store.url());
+            submitPost(store.url(), options);
         }
     }
 
@@ -137,6 +176,25 @@ export default function PostEditor({
                         </Button>
                     </div>
                 </div>
+
+                {Object.keys(errors).length > 0 && (
+                    <div
+                        role="alert"
+                        className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+                    >
+                        <p className="font-medium">
+                            Artikel belum tersimpan. Periksa
+                            hal berikut:
+                        </p>
+                        <ul className="mt-1 list-disc pl-5">
+                            {Object.entries(errors).map(
+                                ([field, message]) => (
+                                    <li key={field}>{message}</li>
+                                ),
+                            )}
+                        </ul>
+                    </div>
+                )}
 
                 <div className="grid gap-2">
                     <Label htmlFor="title">Judul</Label>
@@ -264,24 +322,11 @@ export default function PostEditor({
                     </div>
                 </div>
 
-                <div className="grid gap-2">
-                    <Label>Tag</Label>
-                    <div className="flex flex-wrap gap-2">
-                        {tags.map((tag) => (
-                            <label
-                                key={tag.id}
-                                className="flex cursor-pointer items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm has-checked:border-primary has-checked:bg-primary/10"
-                            >
-                                <Checkbox
-                                    checked={data.tags.includes(tag.id)}
-                                    onCheckedChange={() => toggleTag(tag.id)}
-                                />
-                                {tag.name}
-                            </label>
-                        ))}
-                    </div>
-                    <InputError message={errors.tags} />
-                </div>
+                <TagPicker
+                    tags={tags}
+                    selected={data.tags}
+                    onToggle={toggleTag}
+                />
 
                 <div className="grid gap-2">
                     <Label htmlFor="excerpt">Ringkasan</Label>
@@ -299,18 +344,14 @@ export default function PostEditor({
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="cover_image">Gambar sampul</Label>
+                    <Label htmlFor="cover_image">
+                        Gambar sampul (maks 5 MB, JPG/PNG/WebP)
+                    </Label>
                     <Input
                         id="cover_image"
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0] ?? null;
-                            setData('cover_image', file);
-                            setCoverPreview(
-                                file ? URL.createObjectURL(file) : null,
-                            );
-                        }}
+                        onChange={handleCoverChange}
                     />
                     {coverPreview && (
                         <img
@@ -318,6 +359,11 @@ export default function PostEditor({
                             alt="Pratinjau sampul"
                             className="max-h-48 rounded-xl object-cover"
                         />
+                    )}
+                    {coverError !== null && (
+                        <p className="text-sm font-medium text-red-600 dark:text-red-400">
+                            {coverError}
+                        </p>
                     )}
                     <InputError message={errors.cover_image} />
                 </div>

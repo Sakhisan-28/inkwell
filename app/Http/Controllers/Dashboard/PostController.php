@@ -17,7 +17,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use Intervention\Image\Laravel\Facades\Image;
+use Intervention\Image\ImageManager;
 
 class PostController extends Controller
 {
@@ -187,12 +187,22 @@ class PostController extends Controller
     {
         $path = 'covers/'.uniqid().'.'.$file->getClientOriginalExtension();
 
-        // Produksi umumnya punya GD; tanpa driver (mis. PHP lokal minimal),
-        // simpan file original agar upload tetap berfungsi.
-        if (extension_loaded('gd') || extension_loaded('imagick')) {
-            $image = Image::read($file)->scaleDown(width: 1600);
+        // Pakai Intervention langsung (bukan facade Laravel yang tidak cocok
+        // dengan intervention/image 3.11: ImageManager::usingDriver() sudah
+        // tidak ada). Gagal decode/resize -> simpan file original agar
+        // upload tetap berfungsi.
+        try {
+            if (extension_loaded('gd')) {
+                $manager = ImageManager::gd();
+            } elseif (extension_loaded('imagick')) {
+                $manager = ImageManager::imagick();
+            } else {
+                throw new \RuntimeException('No image driver available.');
+            }
+
+            $image = $manager->read($file)->scaleDown(width: 1600);
             Storage::disk('public')->put($path, (string) $image->encode());
-        } else {
+        } catch (\Throwable) {
             Storage::disk('public')->putFileAs('covers', $file, basename($path));
         }
 

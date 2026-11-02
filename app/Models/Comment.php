@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['post_id', 'user_id', 'body', 'is_approved'])]
+#[Fillable(['post_id', 'user_id', 'name', 'body', 'is_approved'])]
 class Comment extends Model
 {
     /** @use HasFactory<CommentFactory> */

@@ -1,10 +1,15 @@
-import { Link } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
 import { MessageSquareText } from 'lucide-react';
 import PublicLayout from '@/components/public-layout';
 import { PostCard, PostsEmptyState } from '@/components/post-card';
 import type { PostPreview } from '@/components/post-card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { show } from '@/routes/posts';
+import { store as commentsStore } from '@/routes/comments';
 
 type Post = {
     id: number;
@@ -37,8 +42,32 @@ type PageProps = {
 };
 
 export default function PostShow({ post, comments, relatedPosts }: PageProps) {
+    const { data, setData, post: submitForm, processing, errors, reset } = useForm({
+        name: '',
+        body: '',
+    });
+
+    function submit() {
+        const action = commentsStore.form({ post: post.slug }).action;
+        submitForm(action);
+    }
+
+    const { props } = usePage();
+    const appUrl = props?.appUrl || '';
+    const canonicalUrl = `${appUrl}${show(post.slug).url}`;
+
+    const seoDescription = post.metaDescription || post.excerpt || 'Read this story on Inkwell.';
+
     return (
-        <PublicLayout title={post.metaTitle || post.title}>
+        <PublicLayout
+            seo={{
+                title: post.metaTitle || post.title,
+                description: seoDescription,
+                image: post.coverImage,
+                url: canonicalUrl,
+                type: 'article',
+            }}
+        >
             <article className="mx-auto max-w-6xl px-4 pt-12 pb-8 sm:px-8">
                 <div className="mx-auto max-w-[680px]">
                     {post.category && (
@@ -130,6 +159,49 @@ export default function PostShow({ post, comments, relatedPosts }: PageProps) {
                         <PostsEmptyState />
                     </div>
                 )}
+
+                <form>
+                    <div className="grid gap-4">
+                        <Label htmlFor="name">Nama</Label>
+                        <Input
+                            id="name"
+                            type="text"
+                            value={data.name}
+                            onChange={(e) => setData('name', e.target.value)}
+                            placeholder="Nama Anda"
+                            required
+                        />
+                        {errors.name && (
+                            <div className="text-sm text-red-600">{errors.name}</div>
+                        )}
+                    </div>
+                    <div className="grid gap-4">
+                        <Label htmlFor="body">Komentar</Label>
+                        <Textarea
+                            id="body"
+                            value={data.body}
+                            onChange={(e) => setData('body', e.target.value)}
+                            placeholder="Tulis komentar Anda..."
+                            rows={4}
+                            required
+                        />
+                        {errors.body && (
+                            <div className="text-sm text-red-600">{errors.body}</div>
+                        )}
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => reset()}
+                        >
+                            Batal
+                        </Button>
+                        <Button type="button" disabled={processing} onClick={submit}>
+                            {processing ? 'Mengirim…' : 'Kirim'}
+                        </Button>
+                    </div>
+                </form>
             </section>
         </PublicLayout>
     );

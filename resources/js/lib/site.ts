@@ -1,6 +1,8 @@
 /**
- * Sementara: sembunyikan pintu masuk auth viewers (Log in / Subscribe /
- * Begin writing) dari landing page. Route `/login` dan `/register` tetap
- * aktif. Set kembali ke `true` untuk menampilkan lagi.
+ * Tampilkan pintu masuk login di landing page (Log in / Begin writing)
+ * dan tombol Dashboard saat sudah login. Blog ini single-author, jadi
+ * tombol Register/Subscribe sengaja tidak ditampilkan — tapi route
+ * `/register` tetap aktif bila dibutuhkan.
+ * Set ke `false` untuk menyembunyikan lagi.
  */
-export const SHOW_AUTH_ENTRYPOINTS = false;
+export const SHOW_AUTH_ENTRYPOINTS = true;

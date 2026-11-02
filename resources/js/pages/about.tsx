@@ -1,8 +1,20 @@
 import PublicLayout from '@/components/public-layout';
+import { usePage } from '@inertiajs/react';
 
 export default function About({ siteName }: { siteName: string }) {
+    const { props } = usePage();
+    const appUrl = props?.appUrl || '';
+    const canonicalUrl = `${appUrl}/about`;
+
     return (
-        <PublicLayout title={`About — ${siteName}`}>
+        <PublicLayout
+            title={`About — ${siteName}`}
+            seo={{
+                title: `About — ${siteName}`,
+                description: `${siteName} is a quiet corner for long-form writing — essays, notes, and stories set in generous type on warm paper. No noise, no haste. Just words, well kept.`,
+                url: canonicalUrl,
+            }}
+        >
             <section className="mx-auto max-w-[680px] px-4 pt-16 pb-20 sm:px-8">
                 <p className="text-xs tracking-[0.24em] text-[#B4542D] uppercase dark:text-[#D97B54]">
                     About
